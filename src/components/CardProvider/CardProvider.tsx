@@ -1,5 +1,12 @@
 import React from "react";
-import { RANKS, SUITS, type CardType } from "../../models/card-models";
+import {
+  RANKS,
+  SUITS,
+  toPheCardString,
+  type Hand,
+  type CardType,
+} from "../../models/card-models";
+import { evaluateCards, ranks, rankDescription, handRank } from "phe";
 
 // Four hands, indexes 0 - 7
 // Five board cards, index 8 - 12
@@ -8,8 +15,10 @@ type CardContextType = {
   deck: CardType[];
   setDeck: React.Dispatch<React.SetStateAction<CardType[]>>;
   shuffleDeck: () => void;
-  handCards: CardType[][];
+  hands: Hand[];
   communityCards: CardType[];
+  getHandRankDescription: (hand: Hand) => string;
+  getWinningHandId: () => string;
 };
 export const CardContext = React.createContext<CardContextType | undefined>(
   undefined
@@ -21,13 +30,13 @@ function CardProvider({ children }: { children: React.ReactNode }) {
   }, [SUITS, RANKS]) as CardType[];
 
   const [deck, setDeck] = React.useState(FULL_DECK_OF_CARDS);
-  const handCards = [
-    [deck[0], deck[1]],
-    [deck[2], deck[3]],
-    [deck[4], deck[5]],
-    [deck[6], deck[7]],
-  ];
   const communityCards = [deck[8], deck[9], deck[10], deck[11], deck[12]];
+  const hands = [
+    createHand(deck[0], deck[1]),
+    createHand(deck[2], deck[3]),
+    createHand(deck[4], deck[5]),
+    createHand(deck[6], deck[7]),
+  ];
 
   function shuffleDeck(): void {
     const deckCopy = [...deck];
@@ -40,9 +49,55 @@ function CardProvider({ children }: { children: React.ReactNode }) {
     setDeck(deckCopy);
   }
 
+  function createHand(card1: CardType, card2: CardType): Hand {
+    const handId = card1.rank.toString() + card1.suit.toString();
+
+    return {
+      id: handId,
+      cardsInHand: [card1, card2],
+      bestCombination: getHandRankDescription({
+        id: handId,
+        cardsInHand: [card1, card2],
+      }),
+    };
+  }
+
+  function getHandRankDescription(hand: Hand): string {
+    const allCards = [...communityCards, ...hand.cardsInHand].map(
+      toPheCardString
+    );
+    const evaluation = evaluateCards(allCards);
+    const rank = handRank(evaluation);
+    return rankDescription[rank];
+  }
+
+  function getWinningHandId(): string {
+    const handValues = hands.map((hand) => {
+      const allCards = [...communityCards, ...hand.cardsInHand].map(
+        toPheCardString
+      );
+      const evaluation = evaluateCards(allCards);
+      return { hand, value: evaluation.value };
+    });
+
+    const winning = handValues.reduce((best, current) =>
+      current.value < best.value ? current : best
+    );
+
+    return winning.hand.id;
+  }
+
   return (
     <CardContext.Provider
-      value={{ deck, setDeck, shuffleDeck, handCards, communityCards }}>
+      value={{
+        deck,
+        setDeck,
+        shuffleDeck,
+        hands,
+        communityCards,
+        getHandRankDescription,
+        getWinningHandId,
+      }}>
       {children}
     </CardContext.Provider>
   );

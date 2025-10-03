@@ -3,17 +3,32 @@ import { CardContext } from "../CardProvider/CardProvider";
 import Card from "../Card/Card";
 
 export default function Table() {
-  const { shuffleDeck, handCards, communityCards } = React.useContext(
-    CardContext
-  ) ?? {
+  const {
+    shuffleDeck,
+    hands,
+    communityCards,
+    getHandRankDescription,
+    getWinningHandId,
+  } = React.useContext(CardContext) ?? {
     shuffleDeck: () => {},
-    handCards: [],
+    hands: [],
     communityCards: [],
+    getHandRankDescription: () => "",
+    getWinningHandId: () => null,
   };
 
   React.useEffect(() => {
     shuffleDeck();
   }, []);
+
+  function sumbmitGuess(handId: string) {
+    const winningHandId = getWinningHandId();
+    if (handId === winningHandId) {
+      alert("You win!");
+    } else {
+      alert("You lose!");
+    }
+  }
 
   return (
     <>
@@ -22,19 +37,20 @@ export default function Table() {
         <Card key={card.rank + card.suit} rank={card.rank} suit={card.suit} />
       ))}
       <h2>HANDS</h2>
-      {handCards.map((hand) => (
-        <div key={hand[0].rank + hand[0].suit}>
+      {hands.map((hand) => (
+        <button key={hand.id} onClick={() => sumbmitGuess(hand.id)}>
           <Card
-            key={hand[0].rank + hand[0].suit}
-            rank={hand[0].rank}
-            suit={hand[0].suit}
+            key={hand.cardsInHand[0].rank + hand.cardsInHand[0].suit}
+            rank={hand.cardsInHand[0].rank}
+            suit={hand.cardsInHand[0].suit}
           />
           <Card
-            key={hand[1].rank + hand[1].suit}
-            rank={hand[1].rank}
-            suit={hand[1].suit}
+            key={hand.cardsInHand[1].rank + hand.cardsInHand[1].suit}
+            rank={hand.cardsInHand[1].rank}
+            suit={hand.cardsInHand[1].suit}
           />
-        </div>
+          <h2>{getHandRankDescription(hand)}</h2>
+        </button>
       ))}
     </>
   );
