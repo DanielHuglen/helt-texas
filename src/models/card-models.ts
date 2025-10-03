@@ -36,6 +36,7 @@ export type Hand = {
   id: string;
   cardsInHand: [CardType, CardType];
   bestCombination?: string;
+  isHidden?: boolean;
 };
 
 export function toPheCardString(card: CardType): string {

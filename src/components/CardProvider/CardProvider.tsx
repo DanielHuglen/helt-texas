@@ -6,10 +6,7 @@ import {
   type Hand,
   type CardType,
 } from "../../models/card-models";
-import { evaluateCards, ranks, rankDescription, handRank } from "phe";
-
-// Four hands, indexes 0 - 7
-// Five board cards, index 8 - 12
+import { evaluateCards, rankDescription, handRank } from "phe";
 
 type CardContextType = {
   deck: CardType[];
@@ -19,6 +16,8 @@ type CardContextType = {
   communityCards: CardType[];
   getHandRankDescription: (hand: Hand) => string;
   getWinningHandId: () => string;
+  revealHand?: (handId: string) => void;
+  revealAllHands?: () => void;
 };
 export const CardContext = React.createContext<CardContextType | undefined>(
   undefined
@@ -31,12 +30,11 @@ function CardProvider({ children }: { children: React.ReactNode }) {
 
   const [deck, setDeck] = React.useState(FULL_DECK_OF_CARDS);
   const communityCards = [deck[8], deck[9], deck[10], deck[11], deck[12]];
-  const hands = [
-    createHand(deck[0], deck[1]),
-    createHand(deck[2], deck[3]),
-    createHand(deck[4], deck[5]),
-    createHand(deck[6], deck[7]),
-  ];
+  const [hands, setHands] = React.useState<Hand[]>(createDefaultHands());
+
+  React.useEffect(() => {
+    setHands(createDefaultHands());
+  }, [deck]);
 
   function shuffleDeck(): void {
     const deckCopy = [...deck];
@@ -49,6 +47,15 @@ function CardProvider({ children }: { children: React.ReactNode }) {
     setDeck(deckCopy);
   }
 
+  function createDefaultHands(): Hand[] {
+    return [
+      createHand(deck[0], deck[1]),
+      createHand(deck[2], deck[3]),
+      createHand(deck[4], deck[5]),
+      createHand(deck[6], deck[7]),
+    ];
+  }
+
   function createHand(card1: CardType, card2: CardType): Hand {
     const handId = card1.rank.toString() + card1.suit.toString();
 
@@ -59,6 +66,7 @@ function CardProvider({ children }: { children: React.ReactNode }) {
         id: handId,
         cardsInHand: [card1, card2],
       }),
+      isHidden: true,
     };
   }
 
@@ -87,6 +95,20 @@ function CardProvider({ children }: { children: React.ReactNode }) {
     return winning.hand.id;
   }
 
+  function revealHand(handId: string) {
+    setHands((prevHands) => {
+      return prevHands.map((hand) =>
+        hand.id === handId ? { ...hand, isHidden: false } : hand
+      );
+    });
+  }
+
+  function revealAllHands() {
+    setHands((prevHands) => {
+      return prevHands.map((hand) => ({ ...hand, isHidden: false }));
+    });
+  }
+
   return (
     <CardContext.Provider
       value={{
@@ -97,6 +119,8 @@ function CardProvider({ children }: { children: React.ReactNode }) {
         communityCards,
         getHandRankDescription,
         getWinningHandId,
+        revealHand,
+        revealAllHands,
       }}>
       {children}
     </CardContext.Provider>
