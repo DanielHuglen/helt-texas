@@ -74,6 +74,7 @@ function CardProvider({ children }: { children: React.ReactNode }) {
     const allCards = [...communityCards, ...hand.cardsInHand].map(
       toPheCardString
     );
+
     const evaluation = evaluateCards(allCards);
     const rank = handRank(evaluation);
     return rankDescription[rank];
@@ -84,15 +85,16 @@ function CardProvider({ children }: { children: React.ReactNode }) {
       const allCards = [...communityCards, ...hand.cardsInHand].map(
         toPheCardString
       );
+
       const evaluation = evaluateCards(allCards);
-      return { hand, value: evaluation.value };
+      return { id: hand.id, value: evaluation };
     });
 
     const winning = handValues.reduce((best, current) =>
       current.value < best.value ? current : best
     );
 
-    return winning.hand.id;
+    return winning.id;
   }
 
   function revealHand(handId: string) {
