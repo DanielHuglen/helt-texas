@@ -28,6 +28,11 @@ button {
   font-size: 24px;
   font-weight: 600;
 
+  @media screen and (max-width: 480px) {
+    font-size: 0.75rem;
+    border-radius: 2px;
+  }
+
   &:not(:disabled) {
     cursor: pointer;
   }
@@ -43,15 +48,9 @@ button {
 }
 
 img {
-  @media screen and (max-width: 480px) {
-    width: 50px;
-  }
+  width: 55px;
 
-  @media screen and (max-width: 781px) {
+  @media screen and (min-width: 480px) {
     width: 100px;
-  }
-
-  @media screen and (min-width: 782px) {
-    width: unset;
   }
 }
